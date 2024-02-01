@@ -52,7 +52,7 @@ app.get('/products', async (req, res) => {
         const results = {}
         results.totalUser = allProducts.length;
         results.pageCount = Math.ceil(allProducts.length / limit)
-// console.log(results.pageCount)
+        // console.log(results.pageCount)
         if (lastindex < allProducts.length) {
             results.next = {
                 page: page + 1
@@ -63,17 +63,55 @@ app.get('/products', async (req, res) => {
                 page: page - 1
             }
         }
-
-
-
         results.result = allProducts.slice(startindex, lastindex)
         res.status(200).json({
             results
         })
     } catch (e) {
-        res.status(500).json( err)
+        res.status(500).json(err)
+    }
+})
+
+
+app.get('/product', async (req, res) => {
+    const id = req.query.id;
+    try {
+        const productdata = await UsersModel.findById(id);
+        // console.log(productdata);
+
+        res.status(200).json(productdata)
+    }
+    catch (e) {
+        res.status(400).json(e)
     }
 
 })
+
+app.delete('/deleteproduct', async (req, res) => {
+    const id = req.query.id;
+    console.log(id);
+    try {
+        const data = await UsersModel.findByIdAndDelete(id);
+        console.log(data)
+        res.status(200).json("Deleted")
+    } catch (e) {
+        res.status(400).json(e)
+    }
+})
+
+
+app.put('/editproduct', async (req, res) => {
+    const { name, price, desc, category, tag, amount } = req.body;
+    const id = req.query.id;
+    try {
+        const data = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount }, { new: true })
+        res.status(200).json(data);
+    } catch (e) {
+        res.status(400).json(e)
+
+    }
+
+})
+
 
 app.listen(5000, () => console.log('Example app is listening on port 5000.'));
