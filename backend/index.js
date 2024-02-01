@@ -42,31 +42,46 @@ app.post('/productinfo', async (req, res) => {
 app.get('/products', async (req, res) => {
 
     try {
-        const allProducts = await UsersModel.find({});
         const page = parseInt(req.query.page)
         const limit = parseInt(req.query.limit)
-        // console.log(allProducts)
-        const startindex = (page - 1) * limit
-        const lastindex = page * limit
+        var n=(page-1)*limit;
+        if(page=='1'){
+            n=0;
+        }
+        const allProducts = await UsersModel.find().skip(n).limit(limit);
+        const dataCount= await UsersModel.countDocuments();
 
-        const results = {}
-        results.totalUser = allProducts.length;
-        results.pageCount = Math.ceil(allProducts.length / limit)
-        // console.log(results.pageCount)
-        if (lastindex < allProducts.length) {
-            results.next = {
-                page: page + 1
-            }
-        }
-        if (startindex > 0) {
-            results.prev = {
-                page: page - 1
-            }
-        }
-        results.result = allProducts.slice(startindex, lastindex)
         res.status(200).json({
-            results
-        })
+            Count:dataCount,
+            Info: allProducts})
+
+
+
+        // const allProducts = await UsersModel.find()
+        // const page = parseInt(req.query.page)
+        // const limit = parseInt(req.query.limit)
+        // // console.log(allProducts)
+        // const startindex = (page - 1) * limit
+        // const lastindex = page * limit
+
+        // const results = {}
+        // results.totalUser = allProducts.length;
+        // results.pageCount = Math.ceil(allProducts.length / limit)
+        // // console.log(results.pageCount)
+        // if (lastindex < allProducts.length) {
+        //     results.next = {
+        //         page: page + 1
+        //     }
+        // }
+        // if (startindex > 0) {
+        //     results.prev = {
+        //         page: page - 1
+        //     }
+        // }
+        // results.result = allProducts.slice(startindex, lastindex)
+        // res.status(200).json({
+        //     results
+        // })
     } catch (e) {
         res.status(500).json(err)
     }
