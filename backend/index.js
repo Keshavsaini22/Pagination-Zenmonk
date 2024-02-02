@@ -44,17 +44,35 @@ app.get('/products', async (req, res) => {
     try {
         const page = parseInt(req.query.page)
         const limit = parseInt(req.query.limit)
-        const flag=req.query.flag
-        var n=(page-1)*limit;
-        if(page=='1'){
-            n=0;
+        const flag = parseInt(req.query.flag)
+        var n = (page - 1) * limit;
+        const category = req.query.category
+        const search = req.query.search
+        if (page == '1') {
+            n = 0;
         }
-        const allProducts = await UsersModel.find().skip(n).limit(limit).sort({price:1});
-        const dataCount= await UsersModel.countDocuments();
+        const filter = {}
+        if (category)
+            filter.category = category
+        if (search) {
+            filter.name = { $regex: search, $options: 'i' }
+        }
+
+
+        var query = UsersModel.find(filter).skip(n).collation({ locale: 'en' }).limit(limit)
+        if (flag !== 0) {
+            query = UsersModel.find(filter).skip(n).collation({ locale: 'en' }).limit(limit).sort({ price: flag })
+        }
+
+        const allProducts = await query;
+        // console.log(allProducts)
+        const dataCount = await UsersModel.countDocuments();
+        // const dataCount=allProducts.length
 
         res.status(200).json({
-            Count:dataCount,
-            Info: allProducts})
+            Count: dataCount,
+            Info: allProducts
+        })
 
 
 
@@ -84,7 +102,7 @@ app.get('/products', async (req, res) => {
         //     results
         // })
     } catch (e) {
-        res.status(500).json(err)
+        res.status(500).json(e)
     }
 })
 
@@ -115,23 +133,23 @@ app.delete('/deleteproduct', async (req, res) => {
     }
 })
 
-app.put('/update/:id' , async(req,res)=>{
-	console.log('reqst id'  , req)
-     const {id} = req.params;
-	 console.log ('idis ',id)
-	 const { name, price, desc, category, tag, amount} = req.body;
-	try{
-		if(!mongoose.Types.ObjectId.isValid(id)){
-			return res.status(404).json('invaluid id')
-		 } 
-		 const updateUser = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount },{new :true})
-		 if(!updateUser){
-			return res.status(404).json('user not updated')
-		 }
-		 res.json(updateUser)
-	} catch (error) { 
-		res.status(500).json('Internal server error'); 
-	} 
+app.put('/update/:id', async (req, res) => {
+    console.log('reqst id', req)
+    const { id } = req.params;
+    console.log('idis ', id)
+    const { name, price, desc, category, tag, amount } = req.body;
+    try {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json('invaluid id')
+        }
+        const updateUser = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount }, { new: true })
+        if (!updateUser) {
+            return res.status(404).json('user not updated')
+        }
+        res.json(updateUser)
+    } catch (error) {
+        res.status(500).json('Internal server error');
+    }
 })
 
 // app.put('/editproduct', async (req, res) => {
