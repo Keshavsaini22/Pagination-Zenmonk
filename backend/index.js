@@ -44,11 +44,12 @@ app.get('/products', async (req, res) => {
     try {
         const page = parseInt(req.query.page)
         const limit = parseInt(req.query.limit)
+        const flag=req.query.flag
         var n=(page-1)*limit;
         if(page=='1'){
             n=0;
         }
-        const allProducts = await UsersModel.find().skip(n).limit(limit);
+        const allProducts = await UsersModel.find().skip(n).limit(limit).sort({price:1});
         const dataCount= await UsersModel.countDocuments();
 
         res.status(200).json({
@@ -114,19 +115,37 @@ app.delete('/deleteproduct', async (req, res) => {
     }
 })
 
-
-app.put('/editproduct', async (req, res) => {
-    const { name, price, desc, category, tag, amount } = req.body;
-    const id = req.query.id;
-    try {
-        const data = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount }, { new: true })
-        res.status(200).json(data);
-    } catch (e) {
-        res.status(400).json(e)
-
-    }
-
+app.put('/update/:id' , async(req,res)=>{
+	console.log('reqst id'  , req)
+     const {id} = req.params;
+	 console.log ('idis ',id)
+	 const { name, price, desc, category, tag, amount} = req.body;
+	try{
+		if(!mongoose.Types.ObjectId.isValid(id)){
+			return res.status(404).json('invaluid id')
+		 } 
+		 const updateUser = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount },{new :true})
+		 if(!updateUser){
+			return res.status(404).json('user not updated')
+		 }
+		 res.json(updateUser)
+	} catch (error) { 
+		res.status(500).json('Internal server error'); 
+	} 
 })
+
+// app.put('/editproduct', async (req, res) => {
+//     const { name, price, desc, category, tag, amount } = req.body;
+//     const id = req.query.id;
+//     try {
+//         const data = await UsersModel.findByIdAndUpdate(id, { name, price, desc, category, tag, amount }, { new: true })
+//         res.status(200).json(data);
+//     } catch (e) {
+//         res.status(400).json(e)
+
+//     }
+
+// })
 
 
 app.listen(5000, () => console.log('Example app is listening on port 5000.'));
